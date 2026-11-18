@@ -36,9 +36,11 @@ jobs:
       - name: Build, test, and lint
         run: |
           ./gradlew --stacktrace \
+            build \
             :composeApp:desktopTest \
-            :composeApp:testDebugUnitTest \
+            :composeApp:testAndroidHostTest \
+            :androidApp:testDebugUnitTest \
             :composeApp:ktlintCheck \
             :composeApp:detekt \
-            :composeApp:assembleDebug \
+            :androidApp:assembleDebug \
             :composeApp:wasmJsBrowserDistribution

@@ -164,4 +164,4 @@ private fun NavMark(selected: Boolean) {
  */
 fun preloadFillsBench(screen: AppScreen): Boolean = screen == AppScreen.Bench
 
-private const val PRELOAD_ROUNDS = 48
+private const val PRELOAD_ROUNDS = 400

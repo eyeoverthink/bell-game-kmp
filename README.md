@@ -100,7 +100,7 @@ From the repository root:
 That opens the desktop window. Optional, and not required:
 
 - `BELL_SCREEN=bench` (or `causality`, `ledger`, `story`, `table`) opens that screen.
-- `BELL_PRELOAD=1` deals 48 quantum rounds into the score that screen shows.
+- `BELL_PRELOAD=1` deals 400 quantum rounds into the score that screen shows.
   On the bench, that is the bench sample. On every other screen, it is the
   table ledger, and the regime switches to quantum.
 
@@ -134,13 +134,13 @@ Install the Android SDK (command-line tools are enough) and either export
 
 ```bash
 export ANDROID_HOME="$HOME/Android/Sdk"   # or wherever the SDK lives
-./gradlew :composeApp:assembleDebug
+./gradlew :androidApp:assembleDebug
 ```
 
 The debug APK is
 
 ```text
-composeApp/build/outputs/apk/debug/composeApp-debug.apk
+androidApp/build/outputs/apk/debug/androidApp-debug.apk
 ```
 
 Install it with `adb install -r` on a device or emulator, and launch
@@ -169,9 +169,10 @@ composeApp/src/commonMain/kotlin/dev/eyeoverthink/bellgame/
   engine/     rules, strategies, two-qubit state, ledger, causality
   ui/         the exhibit: table, bench, causality, ledger, story
 composeApp/src/commonTest/kotlin/     the checks below, shared
-composeApp/src/androidMain/           one Activity and a vector icon
+composeApp/src/androidMain/           the Android Activity and launcher icon
 composeApp/src/desktopMain/           one window
 composeApp/src/wasmJsMain/            one browser viewport, plus index.html
+androidApp/                           the Android application module
 ```
 
 There is no `expect` / `actual` split. The platform source sets only start
@@ -241,7 +242,10 @@ self-contained exhibit and does not want those services.
 ./gradlew :composeApp:detekt
 ```
 
-`desktopTest` runs the common tests on the JVM. They check:
+`desktopTest` runs the common tests on the JVM. The same tests also run on
+the Android host classpath with `:composeApp:testAndroidHostTest`.
+`:androidApp:testDebugUnitTest` is the application module's own unit-test
+task; the shared tests live in `composeApp`. They check:
 
 - the best of the 16 local tables is exactly 0.75, and no table exceeds it
 - the optimal qubit strategy is `cos²(π/8)` analytically, the CHSH value is
@@ -266,15 +270,10 @@ Kotlin 2.4.21, Compose Multiplatform 1.12.2, JDK 21, Android Gradle Plugin
 9.3.1, compileSdk 37. All of it is free. There is no analytics SDK and no
 runtime HTTP client.
 
-`gradle.properties` sets `android.builtInKotlin=false` and
-`android.newDsl=false`. AGP 9's defaults for those flags do not configure when
-the same module applies both the Kotlin Multiplatform plugin and
-`com.android.application`. AGP 10 will remove the flags. The migration is to
-move `com.android.application` into its own module and leave this one as an
-Android KMP library. That split is not done here: it would move `assembleDebug`
-and `testDebugUnitTest` off `:composeApp`, and the current module still
-produces the debug APK and the Android unit tests. The flags are the known
-way this build keeps working until that split.
+The Android APK is built by `androidApp`, which applies `com.android.application`
+and depends on `composeApp`. The shared module is an Android KMP library, so
+it does not also apply the application plugin. That is the AGP 9 layout:
+`android.builtInKotlin=false` and `android.newDsl=false` are not set.
 
 ## License
 
