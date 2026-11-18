@@ -189,7 +189,7 @@ private fun AngleSlider(label: String, radians: Double, onChange: (Float) -> Uni
 }
 
 private fun benchVerdict(chsh: Double): String = when {
-    chsh >= ChshConstants.tsirelsonChsh - 0.01 -> "Sitting on Tsirelson's bound, 2√2."
+    chsh >= ChshConstants.tsirelsonChsh - 0.01 -> "Sitting on Tsirelson's bound, 2*sqrt(2)."
     chsh > ChshConstants.CLASSICAL_CHSH + 0.02 -> "Above every local strategy, under the qubit limit."
     else -> "At or under the local bound of 2. A truth table can match this."
 }

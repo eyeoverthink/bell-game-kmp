@@ -46,8 +46,8 @@ fun StoryScreen(modifier: Modifier = Modifier) {
             body = "Give them one entangled pair, the Bell state that is an equal mix of both " +
                 "bits zero and both bits one. Alice measures along Z or X, depending on x. " +
                 "Bob measures along the two diagonals between Z and X, depending on y. " +
-                "The chance they win a round is cos²(π/8), about 85.36%. The same angles " +
-                "produce the CHSH number 2√2, Tsirelson's bound. The bench lets you leave " +
+                "The chance they win a round is cos^2(pi/8), about 85.36%. The same angles " +
+                "produce the CHSH number 2*sqrt(2), Tsirelson's bound. The bench lets you leave " +
                 "those angles and watch the win rate fall back toward 75%, or sit on the bound " +
                 "while a Monte Carlo run settles onto the curve.",
         )

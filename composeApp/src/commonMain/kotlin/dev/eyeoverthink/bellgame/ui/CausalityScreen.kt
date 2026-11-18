@@ -184,7 +184,7 @@ private fun explanation(regime: Regime): String = when (regime) {
         "Local boxes are correlation 1/2. Nesting them still leaves Bob short of a full extra bit."
 
     Regime.Quantum ->
-        "The qubit strategy is correlation 1/√2. Stack it as deep as you like: the sum stays under one bit."
+        "The qubit strategy is correlation 1/sqrt(2). Stack it as deep as you like: the sum stays under one bit."
 
     Regime.PopescuRohrlich ->
         "A PR box is correlation 1. Each extra layer doubles the string, and Bob still names his bit perfectly."

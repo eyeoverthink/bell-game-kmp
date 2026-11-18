@@ -32,12 +32,12 @@ fun LedgerScreen(session: GameSession, modifier: Modifier = Modifier) {
     ) {
         Text("The ledger", style = MaterialTheme.typography.headlineMedium, color = BellColors.Ink)
         Text(
-            "Brass is 75%, ion is cos²(π/8), alarm is a perfect score. " +
+            "Brass is 75%, ion is cos^2(pi/8), alarm is a perfect score. " +
                 "A long enough run sits on the line its strategy can actually reach.",
             color = BellColors.Muted,
         )
         LedgerCard(
-            title = "Table · ${session.regime.title}",
+            title = "Table - ${session.regime.title}",
             ledger = session.ledger,
         )
         LedgerCard(
@@ -66,7 +66,7 @@ private fun LedgerCard(title: String, ledger: Ledger) {
                 for (y in 0..1) {
                     val dealt = ledger.roundsFor(x, y)
                     val label = if (dealt == 0) {
-                        "x$x y$y  —"
+                        "x$x y$y  -"
                     } else {
                         "x$x y$y  ${formatPercent(ledger.rateFor(x, y))}  ($dealt)"
                     }

@@ -24,7 +24,10 @@ You play three regimes with the same rules:
    inside that one-bit budget.
 
 Nothing in the running app asks for a key, an account, a config file, or a
-network connection. The physics and the interface live in `commonMain`.
+network connection. Text on screen stays inside the font embedded with the
+Wasm runtime, and the navigation marks are drawn circles, so the page does not
+fetch a fallback face from fonts.gstatic.com. The physics and the interface
+live in `commonMain`.
 
 This repository is a private contest project. It is not published and it has
 not been submitted anywhere.
@@ -97,7 +100,9 @@ From the repository root:
 That opens the desktop window. Optional, and not required:
 
 - `BELL_SCREEN=bench` (or `causality`, `ledger`, `story`, `table`) opens that screen.
-- `BELL_PRELOAD=1` deals a short quantum run first, so the score is not empty.
+- `BELL_PRELOAD=1` deals 48 quantum rounds into the score that screen shows.
+  On the bench, that is the bench sample. On every other screen, it is the
+  table ledger, and the regime switches to quantum.
 
 ```bash
 BELL_SCREEN=bench BELL_PRELOAD=1 ./gradlew :composeApp:run
@@ -117,8 +122,9 @@ The app image lands under `composeApp/build/compose/binaries/main/`. Launch the
 ./gradlew :composeApp:packageDeb
 ```
 
-`packageDeb` needs `dpkg-deb` on the machine. `createDistributable` does not.
-The package version is `1.0.0`.
+`packageDeb` needs both `dpkg-deb` and `fakeroot` on the machine. Without
+`fakeroot` the Debian packager cannot build the archive. `createDistributable`
+does not need either tool. The package version is `1.0.0`.
 
 ### Android
 
@@ -173,6 +179,56 @@ There is no `expect` / `actual` split. The platform source sets only start
 statistics, the information-causality protocol, and the Compose UI are all in
 `commonMain`.
 
+### How the shared-code share is counted
+
+Count `.kt` lines under `composeApp/src`. Drop blank lines. Drop comments,
+including KDoc. A count that keeps comments is higher and is not the figure
+below: on the first commit that figure was 85.7% because comment lines were
+included. The same tree, comments removed, was 83.9% of all Kotlin and 97.4%
+of production Kotlin.
+
+On the current sources the non-comment count is:
+
+| Source set | Non-comment lines |
+| --- | ---: |
+| `commonMain` | 1,836 |
+| `commonTest` | 316 |
+| `androidMain` | 15 |
+| `desktopMain` | 18 |
+| `wasmJsMain` | 15 |
+| All Kotlin | 2,200 |
+| Production (`commonMain` + the three shells) | 1,884 |
+
+`commonMain` is 1,836 / 2,200 = **83.5%** of all Kotlin, and 1,836 / 1,884 =
+**97.5%** of production Kotlin. `commonTest` is shared, but it is not part of
+the production share. Recompute with:
+
+```bash
+python3 - << 'PY'
+import re
+from pathlib import Path
+root = Path("composeApp/src")
+
+def lines(paths):
+    total = 0
+    for path in paths:
+        text = re.sub(r"/\*.*?\*/", "", path.read_text(), flags=re.S)
+        text = re.sub(r"//.*", "", text)
+        total += sum(1 for line in text.splitlines() if line.strip())
+    return total
+
+groups = {
+    name: lines(list((root / name).rglob("*.kt")))
+    for name in ("commonMain", "commonTest", "androidMain", "desktopMain", "wasmJsMain")
+}
+production = groups["commonMain"] + groups["androidMain"] + groups["desktopMain"] + groups["wasmJsMain"]
+everything = production + groups["commonTest"]
+print(groups)
+print(f"commonMain / all Kotlin: {groups['commonMain'] / everything:.1%}")
+print(f"commonMain / production: {groups['commonMain'] / production:.1%}")
+PY
+```
+
 The Kotlin Multiplatform contest starter kit (Koko) was not used as a base.
 It is a Firebase, sign-in, and purchases template. Bell Game is a
 self-contained exhibit and does not want those services.
@@ -209,6 +265,16 @@ the Wasm target still typechecks that shared code.
 Kotlin 2.4.21, Compose Multiplatform 1.12.2, JDK 21, Android Gradle Plugin
 9.3.1, compileSdk 37. All of it is free. There is no analytics SDK and no
 runtime HTTP client.
+
+`gradle.properties` sets `android.builtInKotlin=false` and
+`android.newDsl=false`. AGP 9's defaults for those flags do not configure when
+the same module applies both the Kotlin Multiplatform plugin and
+`com.android.application`. AGP 10 will remove the flags. The migration is to
+move `com.android.application` into its own module and leave this one as an
+Android KMP library. That split is not done here: it would move `assembleDebug`
+and `testDebugUnitTest` off `:composeApp`, and the current module still
+produces the debug APK and the Android unit tests. The flags are the known
+way this build keeps working until that split.
 
 ## License
 

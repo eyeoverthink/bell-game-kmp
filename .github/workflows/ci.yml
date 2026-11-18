@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 37
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platforms;android-37.0" "build-tools;37.0.0"
+
+      - name: Build, test, and lint
+        run: |
+          ./gradlew --stacktrace \
+            :composeApp:desktopTest \
+            :composeApp:testDebugUnitTest \
+            :composeApp:ktlintCheck \
+            :composeApp:detekt \
+            :composeApp:assembleDebug \
+            :composeApp:wasmJsBrowserDistribution
