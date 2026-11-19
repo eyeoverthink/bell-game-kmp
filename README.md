@@ -169,24 +169,24 @@ composeApp/src/commonMain/kotlin/dev/eyeoverthink/bellgame/
   engine/     rules, strategies, two-qubit state, ledger, causality
   ui/         the exhibit: table, bench, causality, ledger, story
 composeApp/src/commonTest/kotlin/     the checks below, shared
-composeApp/src/androidMain/           the Android Activity and launcher icon
 composeApp/src/desktopMain/           one window
 composeApp/src/wasmJsMain/            one browser viewport, plus index.html
-androidApp/                           the Android application module
+androidApp/src/main/                  the Android activity, manifest, and launcher icon
 ```
 
-There is no `expect` / `actual` split. The platform source sets only start
-`BellGameApp`. Game rules, the complex-amplitude simulator, sampling, the
-statistics, the information-causality protocol, and the Compose UI are all in
-`commonMain`.
+`composeApp` still compiles an Android library target so the app can depend on
+the shared code. That target has no hand-written Kotlin. There is no `expect` /
+`actual` split. The platform shells only start `BellGameApp`. Game rules, the
+complex-amplitude simulator, sampling, the statistics, the
+information-causality protocol, and the Compose UI are all in `commonMain`.
 
 ### How the shared-code share is counted
 
-Count `.kt` lines under `composeApp/src`. Drop blank lines. Drop comments,
-including KDoc. A count that keeps comments is higher and is not the figure
-below: on the first commit that figure was 85.7% because comment lines were
-included. The same tree, comments removed, was 83.9% of all Kotlin and 97.4%
-of production Kotlin.
+Count `.kt` lines under `composeApp/src` and the Android shell in
+`androidApp/src`. Drop blank lines. Drop comments, including KDoc. A count
+that keeps comments is higher and is not the figure below: on the first commit
+that figure was 85.7% because comment lines were included. The same tree,
+comments removed, was 83.9% of all Kotlin and 97.4% of production Kotlin.
 
 On the current sources the non-comment count is:
 
@@ -194,7 +194,7 @@ On the current sources the non-comment count is:
 | --- | ---: |
 | `commonMain` | 1,836 |
 | `commonTest` | 316 |
-| `androidMain` | 15 |
+| `androidApp` | 15 |
 | `desktopMain` | 18 |
 | `wasmJsMain` | 15 |
 | All Kotlin | 2,200 |
@@ -202,7 +202,9 @@ On the current sources the non-comment count is:
 
 `commonMain` is 1,836 / 2,200 = **83.5%** of all Kotlin, and 1,836 / 1,884 =
 **97.5%** of production Kotlin. `commonTest` is shared, but it is not part of
-the production share. Recompute with:
+the production share. The Android activity is the application module; it is
+still counted as the Android shell, so moving it out of `composeApp` does not
+change the share. Recompute with:
 
 ```bash
 python3 - << 'PY'
@@ -220,9 +222,10 @@ def lines(paths):
 
 groups = {
     name: lines(list((root / name).rglob("*.kt")))
-    for name in ("commonMain", "commonTest", "androidMain", "desktopMain", "wasmJsMain")
+    for name in ("commonMain", "commonTest", "desktopMain", "wasmJsMain")
 }
-production = groups["commonMain"] + groups["androidMain"] + groups["desktopMain"] + groups["wasmJsMain"]
+groups["androidApp"] = lines(list(Path("androidApp/src").rglob("*.kt")))
+production = groups["commonMain"] + groups["androidApp"] + groups["desktopMain"] + groups["wasmJsMain"]
 everything = production + groups["commonTest"]
 print(groups)
 print(f"commonMain / all Kotlin: {groups['commonMain'] / everything:.1%}")
@@ -238,14 +241,13 @@ self-contained exhibit and does not want those services.
 
 ```bash
 ./gradlew :composeApp:desktopTest
-./gradlew :composeApp:ktlintCheck
-./gradlew :composeApp:detekt
+./gradlew :composeApp:testAndroidHostTest
+./gradlew :composeApp:ktlintCheck :androidApp:ktlintCheck
+./gradlew :composeApp:detekt :androidApp:detekt
 ```
 
-`desktopTest` runs the common tests on the JVM. The same tests also run on
-the Android host classpath with `:composeApp:testAndroidHostTest`.
-`:androidApp:testDebugUnitTest` is the application module's own unit-test
-task; the shared tests live in `composeApp`. They check:
+`desktopTest` runs the common tests on the JVM. The same tests run on the
+Android host classpath with `:composeApp:testAndroidHostTest`. They check:
 
 - the best of the 16 local tables is exactly 0.75, and no table exceeds it
 - the optimal qubit strategy is `cos²(π/8)` analytically, the CHSH value is
@@ -271,9 +273,11 @@ Kotlin 2.4.21, Compose Multiplatform 1.12.2, JDK 21, Android Gradle Plugin
 runtime HTTP client.
 
 The Android APK is built by `androidApp`, which applies `com.android.application`
-and depends on `composeApp`. The shared module is an Android KMP library, so
-it does not also apply the application plugin. That is the AGP 9 layout:
-`android.builtInKotlin=false` and `android.newDsl=false` are not set.
+and depends on `composeApp`. The activity, manifest, and launcher icon live in
+that module. The shared module is an Android KMP library
+(`com.android.kotlin.multiplatform.library`), so it does not also apply the
+application plugin. That is the AGP 9 layout: `android.builtInKotlin=false` and
+`android.newDsl=false` are not set.
 
 ## License
 

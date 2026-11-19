@@ -13,17 +13,14 @@ plugins {
 
 kotlin {
     android {
-        namespace = "dev.eyeoverthink.bellgame"
+        namespace = "dev.eyeoverthink.bellgame.shared"
         compileSdk = 37
         minSdk = 24
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
-        androidResources {
-            enable = true
-        }
         withHostTest {
-            isIncludeAndroidResources = true
+            isIncludeAndroidResources = false
         }
     }
 
@@ -55,9 +52,6 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
-        androidMain.dependencies {
-            implementation(libs.activity.compose)
-        }
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
@@ -85,7 +79,6 @@ detekt {
         files(
             "src/commonMain/kotlin",
             "src/commonTest/kotlin",
-            "src/androidMain/kotlin",
             "src/desktopMain/kotlin",
             "src/wasmJsMain/kotlin",
         ),

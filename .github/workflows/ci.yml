@@ -39,8 +39,9 @@ jobs:
             build \
             :composeApp:desktopTest \
             :composeApp:testAndroidHostTest \
-            :androidApp:testDebugUnitTest \
             :composeApp:ktlintCheck \
+            :androidApp:ktlintCheck \
             :composeApp:detekt \
+            :androidApp:detekt \
             :androidApp:assembleDebug \
             :composeApp:wasmJsBrowserDistribution
